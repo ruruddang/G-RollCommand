@@ -1,0 +1,20 @@
+name: GRollCommand
+version: '1.0.1'
+main: com.ruru.gRollCommand.GRollCommand
+api-version: '1.21'
+author: ruru
+
+commands:
+  roll:
+    description: "가중치 리스트에서 커맨드를 뽑아 콘솔로 실행합니다. 사용: /roll <리스트명>"
+    usage: "/roll <listName>"
+    permission: groll.use
+  rollreload:
+    description: "GRollCommand 설정을 리로드합니다."
+    usage: "/rollreload"
+    permission: groll.reload
+permissions:
+  groll.use:
+    default: true
+  groll.reload:
+    default: op

@@ -1,0 +1,21 @@
+commandLists:
+  test2:
+    cooldown: 0
+    commands:
+      - command: "say 2000_1"
+        weight: 1
+      - command: "say 2000_2"
+        command1: "say 2000_2_1"
+        command2: "say 2000_2_2"
+        weight: 2
+      - command: "say 2000_3"
+        weight: 3
+  test1:
+    cooldown: 0
+    commands:
+      - command: "say 1000_1"
+        weight: 1
+      - command: "say 1000_2"
+        weight: 1
+      - command: "say 1000_3"
+        weight: 1
