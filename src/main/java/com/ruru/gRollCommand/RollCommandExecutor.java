@@ -19,7 +19,7 @@ public class RollCommandExecutor implements CommandExecutor, TabCompleter {
 
     private final Map<UUID, Map<String, Long>> cooldownMap = new HashMap<>();
 
-    private static final String PREFIX = ChatColor.GRAY + "[" + ChatColor.AQUA + "Roll" + ChatColor.GRAY + "] " + ChatColor.RESET;
+    private static final String PREFIX = ChatColor.GRAY + "[" + ChatColor.AQUA + "G-Roll" + ChatColor.GRAY + "] " + ChatColor.RESET;
     private static final Pattern COMMAND_KEY = Pattern.compile("^command\\d*$", Pattern.CASE_INSENSITIVE);
 
     public RollCommandExecutor(GRollCommand plugin) {
