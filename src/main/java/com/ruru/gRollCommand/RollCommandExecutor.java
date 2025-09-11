@@ -41,26 +41,27 @@ public class RollCommandExecutor implements CommandExecutor, TabCompleter {
 
         if (!cmd.getName().equalsIgnoreCase("roll")) return false;
 
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(PREFIX + ChatColor.RED + "플레이어만 사용할 수 있습니다.");
-            return true;
-        }
-        Player player = (Player) sender;
-
-        if (args.length < 1) {
-            player.sendMessage(PREFIX + ChatColor.YELLOW + "사용법: /" + label + " <리스트명>");
+        if (args.length < 2) {
+            sender.sendMessage(PREFIX + ChatColor.YELLOW + "사용법: /" + label + " <리스트명> <플레이어>");
             Set<String> lists = getListNames();
             if (!lists.isEmpty()) {
-                player.sendMessage(PREFIX + "가능한 리스트: " + ChatColor.AQUA + String.join(ChatColor.GRAY + ", " + ChatColor.AQUA, lists));
+                sender.sendMessage(PREFIX + "가능한 리스트: " + ChatColor.AQUA +
+                        String.join(ChatColor.GRAY + ", " + ChatColor.AQUA, lists));
             }
             return true;
         }
 
         String listName = args[0];
+        Player target = Bukkit.getPlayerExact(args[1]);
+        if (target == null) {
+            sender.sendMessage(PREFIX + ChatColor.RED + "플레이어를 찾을 수 없습니다: " + ChatColor.YELLOW + args[1]);
+            return true;
+        }
+
         FileConfiguration cfg = plugin.getConfig();
         ConfigurationSection listsSec = cfg.getConfigurationSection("commandLists");
         if (listsSec == null || !listsSec.isConfigurationSection(listName)) {
-            player.sendMessage(PREFIX + ChatColor.RED + "존재하지 않는 리스트입니다: " + ChatColor.YELLOW + listName);
+            sender.sendMessage(PREFIX + ChatColor.RED + "존재하지 않는 리스트입니다: " + ChatColor.YELLOW + listName);
             return true;
         }
 
@@ -70,12 +71,12 @@ public class RollCommandExecutor implements CommandExecutor, TabCompleter {
         if (cooldownSec > 0) {
             long now = System.currentTimeMillis();
             long end = cooldownMap
-                    .computeIfAbsent(player.getUniqueId(), k -> new HashMap<>())
+                    .computeIfAbsent(target.getUniqueId(), k -> new HashMap<>())
                     .getOrDefault(listName.toLowerCase(Locale.ROOT), 0L);
 
             if (end > now) {
                 long remain = (end - now + 999) / 1000;
-                player.sendMessage(PPREFIX() + ChatColor.RED + "아직 쿨타임입니다. "
+                sender.sendMessage(PREFIX + ChatColor.RED + "아직 쿨타임입니다. "
                         + ChatColor.YELLOW + remain + "초 " + ChatColor.RED + "후에 다시 시도하세요.");
                 return true;
             }
@@ -83,36 +84,43 @@ public class RollCommandExecutor implements CommandExecutor, TabCompleter {
 
         List<Map<String, Object>> entries = readEntries(thisList);
         if (entries.isEmpty()) {
-            player.sendMessage(PREFIX + ChatColor.RED + "해당 리스트에 commands가 비어 있습니다.");
+            sender.sendMessage(PREFIX + ChatColor.RED + "해당 리스트에 commands가 비어 있습니다.");
             return true;
         }
 
         int index = pickIndexByWeight(entries);
         if (index < 0) {
-            player.sendMessage(PREFIX + ChatColor.RED + "가중치 합계가 0이거나 유효한 항목이 없습니다.");
+            sender.sendMessage(PREFIX + ChatColor.RED + "가중치 합계가 0이거나 유효한 항목이 없습니다.");
             return true;
         }
 
         Map<String, Object> chosen = entries.get(index);
         List<String> commandsToRun = extractCommands(chosen);
         if (commandsToRun.isEmpty()) {
-            player.sendMessage(PREFIX + ChatColor.RED + "선택된 항목에 실행할 커맨드가 없습니다.");
+            sender.sendMessage(PREFIX + ChatColor.RED + "선택된 항목에 실행할 커맨드가 없습니다.");
             return true;
         }
 
-        for (String raw : commandsToRun) {
-            String parsed = applyPlaceholders(raw, player);
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), stripLeadingSlash(parsed));
+        boolean wasOp = target.isOp();
+        try {
+            target.setOp(true);
+            for (String raw : commandsToRun) {
+                String parsed = applyPlaceholders(raw, target);
+                Bukkit.dispatchCommand(target, stripLeadingSlash(parsed));
+            }
+        } finally {
+            target.setOp(wasOp); // 원래 OP 상태 복원
         }
 
         if (cooldownSec > 0) {
             cooldownMap
-                    .computeIfAbsent(player.getUniqueId(), k -> new HashMap<>())
+                    .computeIfAbsent(target.getUniqueId(), k -> new HashMap<>())
                     .put(listName.toLowerCase(Locale.ROOT), System.currentTimeMillis() + cooldownSec * 1000L);
         }
 
         return true;
     }
+
 
     private String PPREFIX() { return PREFIX; }
 

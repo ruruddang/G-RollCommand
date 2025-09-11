@@ -6,8 +6,8 @@ author: ruru
 
 commands:
   roll:
-    description: "가중치 리스트에서 커맨드를 뽑아 콘솔로 실행합니다. 사용: /roll <리스트명>"
-    usage: "/roll <listName>"
+    description: "가중치 리스트에서 커맨드를 뽑아 콘솔로 실행합니다. 사용: /roll <리스트명> <플레이어>"
+    usage: "/roll <listName> <player>"
     permission: groll.use
   rollreload:
     description: "GRollCommand 설정을 리로드합니다."
